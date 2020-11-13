@@ -1,0 +1,11 @@
+ 
+export(
+reconstruct_genotype_summary
+,assign_to_tree
+,generate_random_tree
+,simulate_reads_from_tree
+,get_simulated_reads
+,run_sim
+,plot_sim_result
+)
+useDynLib(treemut)
