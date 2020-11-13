@@ -14,7 +14,7 @@ See
 ## Installation
 ```r
 library(devtools)
-install_github("NickWilliamSanger/treemut")
+install_git("https://github.com/NickWilliamsSanger/treemut")
 ```
 ## View vignette for usage 
 ```r
