@@ -13,7 +13,7 @@ Where a given branch implies a genotype and P(genotype) is proportional to branc
 ## Installation
 ```r
 library(devtools)
-install_git("https://github.com/NickWilliamsSanger/treemut")
+install_git("https://github.com/nangalialab/treemut")
 ```
 ## View vignette for usage 
 ```r
