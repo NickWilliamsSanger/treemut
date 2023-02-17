@@ -19,7 +19,7 @@ res = .C("likelihood_mtr",
 )
  */
 //Error checking (file existence etc) is assumed to have been carried out in the calling R code
-void likelihood_mtr(int *mtr,int *depth,int * geno, double * el, double * perr, int * nmuts, int * nsamp, int * nbranch,double * lik){
+void likelihood_mtr(int *mtr,int *depth,int * geno, double * el, double * perr, int * nmuts, int * nsamp, int * nbranch,double * vaf,double * lik){
   int nm= *nmuts;
   int ns= *nsamp;
   int nb= *nbranch;
@@ -33,9 +33,9 @@ void likelihood_mtr(int *mtr,int *depth,int * geno, double * el, double * perr, 
   
  
   for(i=0;i<ns;i++){
-    logV[i]=log(0.5-perr[i]);
+    logV[i]=log(*vaf-perr[i]);
     logP[i]=log(perr[i]);
-    log1minusV[i]=log(0.5+perr[i]);
+    log1minusV[i]=log(1-(*vaf)+perr[i]);
     log1minusP[i]=log(1-perr[i]);
   }
   for(i=0;i<nb;i++){
