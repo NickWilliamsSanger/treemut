@@ -10,7 +10,8 @@ assign_to_tree(
   depth,
   error_rate = rep(0.01, dim(mtr)[2]),
   maxits = 5,
-  vaf = 0.5
+  vaf = 0.5,
+  bverbose = TRUE
 )
 }
 \arguments{
@@ -23,6 +24,8 @@ assign_to_tree(
 \item{error_rate}{Error rate. This is intended as a coarse error measure and should not take more than 4 distinct values. Useful if a sample is mildly contaminated error->0.1.}
 
 \item{maxits}{Number of EM iterations.}
+
+\item{bverbose}{Whether to report progress}
 
 \item{VAF}{Expected VAF of mutant}
 }

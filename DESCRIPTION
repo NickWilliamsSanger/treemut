@@ -5,6 +5,7 @@ Version: 1.2
 License: GPL-3
 Title: treemut. Assigning clonal mutations to trees
 Description: R package for maximum likelihood assignment of mutations to a tree
+VignetteBuilder: knitr
 SystemRequirements:
 Depends: ape
 NeedsCompilation: yes

@@ -50,15 +50,15 @@ rest). This just requires the APE tree as input:
 ``` r
   df=reconstruct_genotype_summary(tree)
 cat(df$samples,"\n")
-#> t8 t18 t46 t29 t48 t35 t3 t4 t15 t10 t49 t17 t22 t21 t27 t14 t30 t16 t42 t24 t23 t9 t7 t28 t33 t1 t32 t37 t25 t34 t26 t41 t43 t44 t13 t38 t40 t20 t50 t36 t6 t31 t5 t39 t19 t2 t45 t12 t11 t47 zeros
+#> t27 t36 t10 t8 t47 t18 t30 t34 t15 t11 t50 t19 t35 t21 t44 t20 t24 t40 t39 t25 t49 t5 t38 t14 t1 t42 t28 t41 t16 t37 t48 t32 t9 t33 t46 t12 t45 t31 t2 t26 t22 t3 t17 t4 t13 t23 t29 t43 t6 t7 zeros
 head(df$df[, 1:3])
 #>                                               profile edge_length mut_count
-#> 1 111000000000000000000000000000000000000000000000000         135         3
-#> 2 110000000000000000000000000000000000000000000000000         158         2
-#> 3 100000000000000000000000000000000000000000000000000          26         1
-#> 4 010000000000000000000000000000000000000000000000000         198         1
-#> 5 001000000000000000000000000000000000000000000000000         188         1
-#> 6 000111111111111111111111111111111111111111111111110         143        47
+#> 1 111111111111000000000000000000000000000000000000000          64        12
+#> 2 111000000000000000000000000000000000000000000000000           2         3
+#> 3 100000000000000000000000000000000000000000000000000          73         1
+#> 4 011000000000000000000000000000000000000000000000000          57         2
+#> 5 010000000000000000000000000000000000000000000000000         179         1
+#> 6 001000000000000000000000000000000000000000000000000         190         1
 ```
 
 Where
@@ -75,49 +75,49 @@ We now simulate some data based on the tree:
 ``` r
  simdat=simulate_reads_from_tree(df,12)
 head(simdat$mtr)
-#>      t8 t18 t46 t29 t48 t35 t3 t4 t15 t10 t49 t17 t22 t21 t27 t14 t30 t16 t42
-#> [1,]  9   8   4   0   0   1  1  0   0   0   0   0   0   0   0   0   0   0   0
-#> [2,]  5   4   5   0   0   0  0  0   0   1   0   0   0   0   0   0   0   0   0
-#> [3,]  6   5   8   0   0   0  0  0   0   0   0   0   0   0   1   0   0   0   0
-#> [4,]  5   7   8   0   1   1  0  0   0   0   0   0   1   0   0   0   0   0   0
-#> [5,]  6   7   6   1   0   1  0  0   0   0   1   0   0   1   0   0   0   0   0
-#> [6,]  5   6   6   0   0   1  0  1   0   0   0   0   0   0   0   0   1   0   0
-#>      t24 t23 t9 t7 t28 t33 t1 t32 t37 t25 t34 t26 t41 t43 t44 t13 t38 t40 t20
-#> [1,]   0   0  0  0   0   0  0   0   0   0   0   0   0   1   0   0   0   0   0
-#> [2,]   0   0  0  0   0   0  0   0   0   0   0   0   0   0   0   0   0   0   0
-#> [3,]   0   0  1  0   0   0  0   1   0   0   0   0   0   0   0   0   0   0   1
-#> [4,]   0   0  0  0   0   0  0   0   0   0   0   0   0   0   0   0   0   0   0
-#> [5,]   0   0  0  0   0   0  0   0   0   0   0   1   0   0   0   2   0   0   0
-#> [6,]   0   0  0  0   0   0  0   0   0   0   0   0   0   0   0   0   0   0   0
-#>      t50 t36 t6 t31 t5 t39 t19 t2 t45 t12 t11 t47 zeros
-#> [1,]   0   0  0   0  0   0   0  0   0   0   0   0     0
-#> [2,]   0   0  0   0  0   0   0  0   0   0   0   0     0
-#> [3,]   0   0  0   0  0   0   0  0   0   0   2   0     0
-#> [4,]   0   0  0   0  0   0   0  0   0   0   0   0     0
-#> [5,]   0   0  0   0  0   0   1  0   0   0   0   0     0
-#> [6,]   0   0  0   0  0   0   0  0   0   0   0   0     0
+#>      t27 t36 t10 t8 t47 t18 t30 t34 t15 t11 t50 t19 t35 t21 t44 t20 t24 t40 t39
+#> [1,]   5   8   6  4   5   3   3  12   5   8   7   3   0   0   0   1   0   0   0
+#> [2,]   2   3   5  8   5   3   4   6   5   5   5   6   0   0   1   1   1   0   0
+#> [3,]   9   6   4  7   4   4   6   3   6   4   7   7   0   0   0   0   0   0   0
+#> [4,]   3   9   3  5   3   8   5   5   5   7   5   6   0   0   0   0   0   0   0
+#> [5,]   4   5   3  5   7   4   1   8   4   6   3   9   0   0   1   0   0   0   0
+#> [6,]   5   4   5  9   6   8   7   6   2   5   6   2   1   1   0   0   0   0   0
+#>      t25 t49 t5 t38 t14 t1 t42 t28 t41 t16 t37 t48 t32 t9 t33 t46 t12 t45 t31
+#> [1,]   0   0  0   0   0  0   0   0   0   0   0   0   0  0   0   0   0   1   0
+#> [2,]   0   1  0   0   0  0   0   0   0   0   0   0   0  0   1   0   1   0   0
+#> [3,]   0   0  0   0   0  0   0   0   0   0   3   0   0  0   0   0   0   1   0
+#> [4,]   0   0  0   0   0  0   0   0   0   0   0   1   0  0   1   0   0   0   1
+#> [5,]   0   1  0   0   1  0   0   1   0   0   0   0   0  0   1   1   0   0   0
+#> [6,]   0   0  0   1   0  0   0   0   1   0   0   0   1  0   0   0   0   0   0
+#>      t2 t26 t22 t3 t17 t4 t13 t23 t29 t43 t6 t7 zeros
+#> [1,]  1   1   1  0   0  0   0   1   0   0  0  0     0
+#> [2,]  0   0   0  0   0  0   0   0   0   0  0  0     0
+#> [3,]  0   0   0  0   0  0   0   0   0   0  0  0     0
+#> [4,]  0   0   0  0   0  0   0   0   0   0  0  0     0
+#> [5,]  0   0   0  0   0  0   0   0   0   0  0  0     0
+#> [6,]  1   1   0  0   0  0   0   1   0   0  0  0     0
 head(simdat$depth)
-#>      t8 t18 t46 t29 t48 t35 t3 t4 t15 t10 t49 t17 t22 t21 t27 t14 t30 t16 t42
-#> [1,] 12  18  12  12  10  16 13 11  11  13  11  12  14  19  10   8   8  12   8
-#> [2,] 14  17   9   8   9  13 13  8  19   9  19  12  17  13  11  13  16  16  15
-#> [3,] 14  13  11  15   6   8 14 13  12  17   9  15  11  13  15  13   8  13  10
-#> [4,] 11  18  13  10  16  15 12 12  15   8  10  10  13  12  11  11   7  12   7
-#> [5,] 13  12  10   8  14  10 14  9  14  16  11  13  12  12  18  11  14  10  17
-#> [6,] 11  13  10  15  10  11 13 13   4  14  19   9  14  11  11  14  14  18  14
-#>      t24 t23 t9 t7 t28 t33 t1 t32 t37 t25 t34 t26 t41 t43 t44 t13 t38 t40 t20
-#> [1,]  12   7 16 12   9   9 16  22  14  15  12  10  17  10  15  13  12  14   4
-#> [2,]   7  20  8 14  13  11 18   8  15  14  16  12  12  15  18  16   8  10  15
-#> [3,]   8   9 12  8  11  12  6  15  18  12  10  16  11  12  10  10  14   9  14
-#> [4,]  11  15  8  6   9  10 17  10  15   9  13  11  11   9  15  23   6  13  12
-#> [5,]   7   8 11 13  13   8  8  10  19  10  11  12  15  10  10  16  17  12  12
-#> [6,]  17   4 10 13  12  12 12  17   8  13   7   7  14  13  10   5  11  15   9
-#>      t50 t36 t6 t31 t5 t39 t19 t2 t45 t12 t11 t47 zeros
-#> [1,]   7  12 12   6  9  11  14  5  13   9  11  12   100
-#> [2,]  15  13 11  12 13  11  17  8  12  18  11  13   100
-#> [3,]  13   9  8  10 15  14  10  9  18  12  12  17   100
-#> [4,]  15  15 13  13  9   8  14 12  15  15  11  19   100
-#> [5,]  17   7 10  16 10  12  22 11  14  11  22  12   100
-#> [6,]  12  19 11  16  6   9  15 14  12  10  16   9   100
+#>      t27 t36 t10 t8 t47 t18 t30 t34 t15 t11 t50 t19 t35 t21 t44 t20 t24 t40 t39
+#> [1,]   8  10  13 10   7   8   9  14   8  14  12   9  10  11   8   7   8  11  10
+#> [2,]   7   8  12 11   9   6  12   9   8  13  14  15  12  10  13  17   5  16   7
+#> [3,]  14  13  10 10  11  10  10   4  11   9  11  13   9  11   7  16  10  14  11
+#> [4,]   5  18   5 12   8  14  13   7  11  13  14  10   7   6   6  15   7   9  10
+#> [5,]  11  11  10  7  11  10  10  12  11   9  13  16  12  15  17  12   6  12  14
+#> [6,]  12   8  11 11  13  14  11  10  14  15  10   7  15  12   6  12  11   9  17
+#>      t25 t49 t5 t38 t14 t1 t42 t28 t41 t16 t37 t48 t32 t9 t33 t46 t12 t45 t31
+#> [1,]   8   4 14  15  11  9  10   9  14  15  10  16  10  9  17  10  17   6  13
+#> [2,]  10  11 20  15   9  8   7  12  12  17  20   7  12 11  10  14  11   8   9
+#> [3,]   8  11 11   9   6 12  14  13  11  12  15   9  11  7  12  14  18  14  10
+#> [4,]  11  14 14  19  14 15  11   8   8   8  23   9  12 17  12  15  13  18  11
+#> [5,]   9  13  9  19  17  9  15  12  16  11  14  15  11 11   9  19  10   6  13
+#> [6,]  11  10 14  23  16 13  10   8  22  14  14  12  14 11   8  15  16  10  14
+#>      t2 t26 t22 t3 t17 t4 t13 t23 t29 t43 t6 t7 zeros
+#> [1,] 10  12  11 12  16 10   8  11  18  10 15 12   100
+#> [2,] 25  11  10 14  11 14  16  11  12  14 14 12   100
+#> [3,] 11  16  16 12  13 19  10  12  19  16 12 17   100
+#> [4,] 13  10  15 11   7 14  11   8  11   9 12 11   100
+#> [5,]  6  17  15 13  14 14  11  14   9  14 13 14   100
+#> [6,] 16  16  14 11  11 12  12  12  14  16 10 13   100
 print(simdat$p.error)
 #>  [1] 1e-02 1e-02 1e-02 1e-02 1e-02 1e-02 1e-02 1e-02 1e-02 1e-02 1e-02 1e-02
 #> [13] 1e-02 1e-02 1e-02 1e-02 1e-02 1e-02 1e-02 1e-02 1e-02 1e-02 1e-02 1e-02
@@ -133,28 +133,27 @@ low.
 
 ``` r
  res=assign_to_tree(tree,simdat$mtr,simdat$depth,error_rate=simdat$p.error)
-#> delta edge length= 0.9903884 
-#> Loglik= -626151.2 
-#> delta edge length= 0.01355983 
-#> Loglik= -577319.7 
-#> delta edge length= 0.001039046 
-#> Loglik= -577306.1 
-#> delta edge length= 0.0001294873 
-#> Loglik= -577305.7 
-#> delta edge length= 2.120271e-05 
-#> Loglik= -577305.6 
+#> Initialising edge lengths to 1
+#> delta edge length= 0.989197 
+#> Loglik= -545722.5 
+#> delta edge length= 0.01186178 
+#> Loglik= -503079.1 
+#> delta edge length= 0.0005977155 
+#> Loglik= -503072.6 
+#> delta edge length= 4.926931e-05 
+#> Loglik= -503072.4 
+#> delta edge length= 5.773825e-06 
+#> Loglik= -503072.4 
 #> Finished assigning mutations
 #> calculating pvalues
-#> On 1000  of  10092 
-#> On 2000  of  10092 
-#> On 3000  of  10092 
-#> On 4000  of  10092 
-#> On 5000  of  10092 
-#> On 6000  of  10092 
-#> On 7000  of  10092 
-#> On 8000  of  10092 
-#> On 9000  of  10092 
-#> On 10000  of  10092
+#> On 1000  of  8979 
+#> On 2000  of  8979 
+#> On 3000  of  8979 
+#> On 4000  of  8979 
+#> On 5000  of  8979 
+#> On 6000  of  8979 
+#> On 7000  of  8979 
+#> On 8000  of  8979
 tree_estimated=res$tree
 par(mfcol=c(1,2))
 plot(ladderize(tree,right=TRUE),cex=0.5)
@@ -173,3 +172,55 @@ plot_sim_result(sim)
 ```
 
 <img src="man/figures/README-unnamed-chunk-7-1.png" width="100%" />
+
+## Specifying an alternative VAF
+
+This is most relevant when the samples are perhaps sub-clonal or
+non-pure and therefore consistently exhibit a VAF\<0.5 and also the
+VAF=1 setting is appropriate to single copy sex chromosomes.
+
+We use a simple error model to give the binomial probability of
+observing a mutant base for a given VAF:
+
+![p(\text{base called mutant}\| Vaf=V)=p(\text{base called mutant}\| \text{base is mutant})V+p(\text{base called mutant}\| \text{base is wild type})(1-V)](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;p%28%5Ctext%7Bbase%20called%20mutant%7D%7C%20Vaf%3DV%29%3Dp%28%5Ctext%7Bbase%20called%20mutant%7D%7C%20%5Ctext%7Bbase%20is%20mutant%7D%29V%2Bp%28%5Ctext%7Bbase%20called%20mutant%7D%7C%20%5Ctext%7Bbase%20is%20wild%20type%7D%29%281-V%29 "p(\text{base called mutant}| Vaf=V)=p(\text{base called mutant}| \text{base is mutant})V+p(\text{base called mutant}| \text{base is wild type})(1-V)")
+
+where
+
+![p(\text{base called mutant}\| \text{base mutant})=1-\epsilon](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;p%28%5Ctext%7Bbase%20called%20mutant%7D%7C%20%5Ctext%7Bbase%20mutant%7D%29%3D1-%5Cepsilon "p(\text{base called mutant}| \text{base mutant})=1-\epsilon")
+
+and
+
+![p(\text{base called mutant}\| \text{base is wild type})=\epsilon](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;p%28%5Ctext%7Bbase%20called%20mutant%7D%7C%20%5Ctext%7Bbase%20is%20wild%20type%7D%29%3D%5Cepsilon "p(\text{base called mutant}| \text{base is wild type})=\epsilon")
+
+Giving
+
+![p(\text{base called mutant}\| Vaf=V)= V(1-2\epsilon)+\epsilon](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;p%28%5Ctext%7Bbase%20called%20mutant%7D%7C%20Vaf%3DV%29%3D%20V%281-2%5Cepsilon%29%2B%5Cepsilon "p(\text{base called mutant}| Vaf=V)= V(1-2\epsilon)+\epsilon")
+
+Note that this differs from version 1.1 where the depth matrix was
+assumed to be mutant + all other reads.
+
+In the case of single copy sex chromosomes it is advisable to first
+estimate the branch lengths using the autosomal variants and then
+separately run the sex chromosome with maxits=1 and VAF=1 and then
+combine the results.
+
+### Illustrative simulations showing the consequence of mis-specification of VAF on branch length estimation
+
+``` r
+par(mfrow=c(2,2))
+for(vaf in c(0.5,0.3,1)){
+  xval=seq(0.05,1,0.05)
+  simdat=simulate_reads_from_tree(df,12,vaf = vaf)
+  sims=sapply(xval,function(v) {res=assign_to_tree(tree,simdat$mtr,simdat$depth,error_rate=simdat$p.error,vaf=v,bverbose=FALSE);treemut:::compare_sim(df,res)})
+  plot(xval,sims["adsoft",],type="b",xaxt="n",xlab="Supplied VAF",
+       main=sprintf("True VAF=%3.0f%%: Mean Absolute Error in Inferred Branch Length",100*vaf),ylab="Mean Absolute Error in Branch Length")
+  axis(1,at=seq(0,1,0.1))
+  if(vaf==1){
+    plot(xval,sims["adsoft",],type="b",xaxt="n",xlab="Supplied VAF",main=sprintf("True VAF=%3.0f%%: Mean Absolute Error in Inferred Branch Length",100*vaf),
+         ylab="Mean Absolute Error in Branch Length",ylim=c(0,1))
+    axis(1,at=seq(0,1,0.1))
+  }
+}
+```
+
+<img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />

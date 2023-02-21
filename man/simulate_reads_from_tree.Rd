@@ -15,9 +15,15 @@ simulate_reads_from_tree(
 \arguments{
 \item{df}{list. genotype summary}
 
+\item{n_artifacts}{Number of artifact to include}
+
+\item{p.error}{Error rate}
+
+\item{vaf}{VAF for determining mutant read probability.}
+
 \item{avgdeph}{Average depth}
 
-\item{depth}{Depth count matrix. Each row is a mutation and each colomn is a clonal sample}
+\item{depth}{Depth count matrix. Each row is a mutation and each column is a clonal sample}
 }
 \value{
 Returns a list containing:(mtr=mtr,depth=depth,edge=ml,df=df,p.error=p.error

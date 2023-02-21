@@ -1,20 +1,19 @@
 ---
-output: github_document
+title: "Introduction to treemut"
+output: rmarkdown::html_vignette
+description: >
+  Introduction to assigning mutations to phylogenetic trees using treemut
+vignette: >
+  %\VignetteIndexEntry{Introduction to treemut}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
 ---
 
-<!-- README.md is generated from README.Rmd. Please edit that file -->
-
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.path = "man/figures/README-",
-  out.width = "100%",
-  echo=TRUE
-)
-library(treemut)
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("treemut")
+#library("devtools");load_all()
 ```
-
 ### Overview 
 Code implementing maximum likelihood assignment of mutations to trees.  The method uses an EM method to soft assign mutations to branches and simultaneously estimate branch lengths.
 
