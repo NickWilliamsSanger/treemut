@@ -1,0 +1,133 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%",
+  echo=TRUE
+)
+library(treemut)
+```
+
+### Overview 
+Code implementing maximum likelihood assignment of mutations to trees.  The method uses an EM method to soft assign mutations to branches and simultaneously estimate branch lengths.
+
+### Algorithm
+Each mutation is assigned to branch with probability:
+
+P(Mutation has genotype ) ~ P(Read Count | genotype)P(genotype)
+
+Where a given branch implies a genotype and P(genotype) is proportional to branch length.  The read counts are modelled using the binomial distribution with up to 4 distinct per sample specific error rates and an assumed VAF=0.5 for variant sites and VAF=0 for wild type sites.
+
+## Installation
+```r
+library(devtools)
+install_git("https://github.com/nangalialab/treemut")
+```
+
+## Example usage
+
+### Generate tree
+```{r dev.args=list(pointsize=12),fig.height=6,fig.width=8}
+tree=generate_random_tree(50)
+plot(tree)
+```
+
+Note that the tree includes an outgroup "zeros".  This can be added to a tree obtained from other sources by
+```{r eval=FALSE}
+tree=bind.tree(tree,read.tree(text="(zeros:0);"))
+```
+
+Now we create a summary object that summarises each branch of the tree as a genotype (1's for samples that share the branch and 0's for the rest).  This just requires the APE tree as input:
+```{r}
+  df=reconstruct_genotype_summary(tree)
+cat(df$samples,"\n")
+head(df$df[, 1:3])
+```
+
+
+
+Where
+
+* "profile" column indicates the genotype (in the same order as df sample)
+* "edge\_length" gives the branch edge length i.e. number of mutations assigned to branch (perfectly known here)
+* "mut\_count"  Indicates the number of mutant samples implied by the genotype (i.e. the number of 1s in "profile")
+
+
+We now simulate some data based on the tree:
+
+```{r}
+ simdat=simulate_reads_from_tree(df,12)
+head(simdat$mtr)
+head(simdat$depth)
+print(simdat$p.error)
+```
+
+We now have required information: mutant read matrix "mtr", depth matrix "depth", genotype summary "df",and base calling error rate "p.error" - note how we've set the last entry corresponding to "zeros" outgroup very low.
+
+```{r dev.args=list(pointsize=12),fig.height=8,fig.width=10}
+ res=assign_to_tree(tree,simdat$mtr,simdat$depth,error_rate=simdat$p.error)
+tree_estimated=res$tree
+par(mfcol=c(1,2))
+plot(ladderize(tree,right=TRUE),cex=0.5)
+plot(ladderize(tree_estimated,right=TRUE),cex=0.5)
+```
+
+
+```{r dev.args=list(pointsize=12),fig.height=10,fig.width=10}
+sim=list(edge_length_orig=df$df$edge_length,
+         edge_length_inferred=res$df$df$edge_length,
+         expected_edge_length_inferred=res$df$df$expected_edge_length,
+         edge_idx_orig=simdat$edge,
+         edge_idx_ml=res$summary$edge_ml)
+plot_sim_result(sim)
+```
+
+## Specifying an alternative VAF
+This is most relevant when the samples are perhaps sub-clonal or non-pure and therefore consistently exhibit a VAF<0.5 and also the VAF=1 setting is appropriate to single copy sex chromosomes.  
+
+We use a simple error model to give the binomial probability of observing a mutant base for a given VAF:
+
+\[ p(\text{base called mutant}| Vaf=V)=p(\text{base called mutant}| \text{base is mutant})V+p(\text{base called mutant}| \text{base is wild type})(1-V)\]
+
+where 
+\[p(\text{base called mutant}| \text{base mutant})=1-\epsilon\]
+
+and
+\[p(\text{base called mutant}| \text{base is wild type})=\epsilon\]
+
+Giving 
+
+\[ p(\text{base called mutant}| Vaf=V)= V(1-2\epsilon)+\epsilon\]
+
+Note that this differs from version 1.1 where the depth matrix was assumed to be mutant + all other reads. 
+
+In the case of single copy sex chromosomes it is advisable to first estimate the branch lengths using the autosomal variants and then separately run the sex chromosome with maxits=1 and VAF=1 and then combine the results.
+
+
+
+### Illustrative simulations showing the consequence of mis-specification of VAF on branch length estimation
+
+```{r dev.args=list(pointsize=12),fig.height=10,fig.width=10}
+par(mfrow=c(2,2))
+for(vaf in c(0.5,0.3,1)){
+  xval=seq(0.05,1,0.05)
+  simdat=simulate_reads_from_tree(df,12,vaf = vaf)
+  sims=sapply(xval,function(v) {res=assign_to_tree(tree,simdat$mtr,simdat$depth,error_rate=simdat$p.error,vaf=v,bverbose=FALSE);treemut:::compare_sim(df,res)})
+  plot(xval,sims["adsoft",],type="b",xaxt="n",xlab="Supplied VAF",
+       main=sprintf("True VAF=%3.0f%%: Mean Absolute Error in Inferred Branch Length",100*vaf),ylab="Mean Absolute Error in Branch Length")
+  axis(1,at=seq(0,1,0.1))
+  if(vaf==1){
+    plot(xval,sims["adsoft",],type="b",xaxt="n",xlab="Supplied VAF",main=sprintf("True VAF=%3.0f%%: Mean Absolute Error in Inferred Branch Length",100*vaf),
+         ylab="Mean Absolute Error in Branch Length",ylim=c(0,1))
+    axis(1,at=seq(0,1,0.1))
+  }
+}
+```
+
