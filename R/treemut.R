@@ -1,4 +1,10 @@
-
+#' Constructs a genotype summary.
+#'
+#' The summary is represented as a data.frame where each row corresponds to a branch.
+#' @param phylo  An APE tree
+#'
+#' @return a list with two elements: df - a data.frame where each row represents a branch; samples - a character vector of tip labels.
+#' @export
 reconstruct_genotype_summary=function(phylo
 ){
   dat=phylo$edge
@@ -59,17 +65,34 @@ add_derived_profile_info=function(profile_df,samples=sprintf("s%s",0:(nchar(prof
   profile_df$label[idx]=sapply(idx,function(i) samples[which(profile_df$profile_int[[i]]==1)])
   profile_df
 }
-
-assign_to_tree=function#Assigns mutations to a tree topology and sets the branch lengths based on the hard assignment of mutations to branches.
-(tree, ##<< Tree. Should already include the zeros outgroup..
- mtr,##<< Mutant read count matrix. Each row is a mutation and each colomn is a clonal sample
- depth,##<< Depth count matrix. Each row is a mutation and each colomn is a clonal sample
- error_rate=rep(0.01,dim(mtr)[2]),##<< Error rate. This is intended as a coarse error measure and should not take more than 4 distinct values. Useful if a sample is mildly contaminated error->0.1.
- maxits=5){
+#' Assigns mutations to a tree topology and sets the branch lengths based on the hard assignment of mutations to branches.
+#'
+#' @param tree  phylo. Should  already include the zeros outgroup..
+#' @param mtr  Mutant read count matrix. Each row is a mutation and each colomn is a clonal sample BLAH
+#' @param depth Depth count matrix. Each row is a mutation and each colomn is a clonal sample
+#' @param error_rate  Error rate. This is intended as a coarse error measure and should not take more than 4 distinct values. Useful if a sample is mildly contaminated error->0.1.
+#' @param maxits Number of EM iterations. 
+#' @param VAF Expected VAF of mutant 
+#' @param bverbose Whether to report progress
+#' @return Returns a list containing:
+#'  tree: the adjusted tree
+#'  summary: a data.framethat is aligned with the input matrices and maps the mutations to branches:
+#'   summary$edge_ml : Specifies the index of the branch in the tree edge matrix.  
+#'   summary$pval :  A heuristic pvalue assessing the hypothesis that the mutation is consistent with the provided tree topology.   
+#' @export
+#' @useDynLib treemut 
+assign_to_tree=function
+(tree, 
+ mtr,
+ depth,##<<
+ error_rate=rep(0.01,dim(mtr)[2]),##<<
+ maxits=5,
+ vaf=0.5,
+ bverbose=TRUE){
   df=reconstruct_genotype_summary(tree)
   mtr=cbind(mtr,zeros=0)
   dep=cbind(depth,zeros=10)
-  info=assign_to_df(mtr,dep,df,error_rate=rep(0.01,dim(mtr)[2]),maxits=maxits)
+  info=assign_to_df(mtr,dep,df,error_rate=rep(0.01,dim(mtr)[2]),maxits=maxits,vaf=vaf,bverbose=bverbose)
   tree$edge.length=info$df$df$edge_length  ##Could be expected edge_length
   info$summary$profile=info$df$df$profile[info$summary$edge_ml]
   info$tree=tree
@@ -81,7 +104,7 @@ assign_to_tree=function#Assigns mutations to a tree topology and sets the branch
   ### summary$pval :  A heuristic pvalue assessing the hypothesis that the mutation is consistent with the provided tree topology.   
 }
 
-assign_to_df=function(mtr,dep,df,error_rate=rep(0.01,dim(mtr)[2]),maxits=5){
+assign_to_df=function(mtr,dep,df,error_rate=rep(0.01,dim(mtr)[2]),maxits=5,vaf=0.5,bverbose=TRUE){
   if(!is.matrix(mtr)){
     nm=names(mtr)
     mtr=matrix(mtr,nrow=1)
@@ -89,8 +112,12 @@ assign_to_df=function(mtr,dep,df,error_rate=rep(0.01,dim(mtr)[2]),maxits=5){
     dep=matrix(dep,nrow=1)
     colnames(dep)=nm
   }
+  if(length(vaf)==1){
+    vaf=rep(vaf,dim(mtr)[2])
+  }
   p.err=error_rate#c(error_rate,1e-10)
   p.err=p.err[match(df$samples,colnames(mtr))]
+  vaf=vaf[match(df$samples,colnames(mtr))]
   mtr=mtr[,df$samples]
   dep=dep[,df$samples]
   if(!is.matrix(mtr)){
@@ -101,22 +128,39 @@ assign_to_df=function(mtr,dep,df,error_rate=rep(0.01,dim(mtr)[2]),maxits=5){
     colnames(dep)=nm
   }
   tree_genotypes=do.call("rbind",df$df$profile_int)
-  el=rep(1,length(df$df$edge_length))
+  if(maxits==1){
+    if(bverbose)
+      cat("maxits=1 - therefore using provided edge lengths as initial edge lengths\n")
+    el=df$df$edge_length
+  }else{
+    if(bverbose)
+      cat("Initialising edge lengths to 1\n")
+    el=rep(1,length(df$df$edge_length))
+  }
+  el=ifelse(el<1e-100,1e-100,el)
   loglik=rep(NA,maxits)
   n=dim(mtr)[1]
   for(i in 1:maxits){
     ol=el
-    lik=get_likelihood_mtr_C(mtr,dep,tree_genotypes,el,p.error = p.err)
+    lik=get_likelihood_mtr_C(mtr,dep,tree_genotypes,el,p.error = p.err,vaf=vaf,bverbose=bverbose)
     edge_ml=apply(lik,1,which.max)
     #n=length(edge_ml)
     p=exp(lik-lik[(edge_ml-1)*n+1:n])##Substract max to just control range of lik... comes out in the wash later.
     p=p/rowSums(p)
     loglik[i]=sum(p*lik)
+    if(is.na(loglik[i])){
+      browser()
+    }
+    #browser()
     el=colSums(p,na.rm=T)
+    ## Don't allow zero length el
+    el=ifelse(el<1e-100,1e-100,el)
     epsilon=sum(abs(el-ol))/dim(mtr)[1]
+    if(bverbose){
     cat("delta edge length=",epsilon,"\n")
     cat("Loglik=",loglik[i],"\n")
-    if(epsilon<0.01/dim(mtr)[1]){
+    }
+    if(epsilon<1e-6){
       break
     }
   }
@@ -125,11 +169,13 @@ assign_to_df=function(mtr,dep,df,error_rate=rep(0.01,dim(mtr)[2]),maxits=5){
   df$df$edge_length=sapply(1:length(df$df$edge_length),function(i){length(which(edge_ml==i))})
   
   p_else_where=1-p[(edge_ml-1)*n+1:n]
-  cat("Finished assigning mutations\ncalculating pvalues\n")
+  if(bverbose){
+    cat("Finished assigning mutations\ncalculating pvalues\n")
+  }
   pval=rep(NA,length(edge_ml))
   for(i in 1:length(pval)){
-    pval[i]= get_mutation_assignment_pval(df$df,edge_ml[i],mtr[i,],dep[i,],p.err)
-    if(i %% 1000 == 0){
+    pval[i]= get_mutation_assignment_pval(df$df,edge_ml[i],mtr[i,],dep[i,],p.err,vaf)
+    if(i %% 1000 == 0 && bverbose){
       cat("On",i," of ",length(pval),"\n")
     }
   }
@@ -138,7 +184,7 @@ assign_to_df=function(mtr,dep,df,error_rate=rep(0.01,dim(mtr)[2]),maxits=5){
 
 
 
-get_likelihood_mtr_C=function(mtr,depth,geno,el,p.error=rep(0.01,dim(mtr)[2])){
+get_likelihood_mtr_C=function(mtr,depth,geno,el,p.error=rep(0.01,dim(mtr)[2]),vaf=rep(0.5,dim(mtr)[2]),bverbose=FALSE){
   if(dim(mtr)[2]!=dim(geno)[2]){
     stop("error: dimension mismatch betwee tree genotypes and mtr")
   }
@@ -154,16 +200,19 @@ get_likelihood_mtr_C=function(mtr,depth,geno,el,p.error=rep(0.01,dim(mtr)[2])){
            nmuts=as.integer(nmuts),
            nsamp=as.integer(nsamp),
            nbranch=as.integer(nbranch),
-           lik=double(nmuts*nbranch)
+           vaf=as.double(vaf),
+           lik=double(nmuts*nbranch),
+           bverbose=as.integer(bverbose)
+           
   )
   matrix(res[["lik"]],ncol=nbranch)
 }
 
-get_mutation_assignment_pval=function(df,i,mtr,dep,p.error){
+get_mutation_assignment_pval=function(df,i,mtr,dep,p.error,vaf=0.5){
   profile_int=df$profile_int[[i]]
   idx.inside=which(profile_int==1)
   idx.outside=which(profile_int==0)
-  V=0.5-p.error
+  V=vaf*(1-2*p.error)+p.error
   
   ##Calculate probability for observing <= total MTR at variant sites give VAF=0.5.  This is complicated by allowing different error rates for each sample (otherwise just pbinom)
   if(length(idx.inside)>0){
@@ -224,7 +273,13 @@ split_profile=function(profile){
   as.integer(unlist(strsplit(profile,split="")))
 }
 
-##Generate a random tree
+#' Generate a random tree 
+#'
+#' Generates a random tree with the specified number of tips. For a more realistic tree use e.g. rsimpop
+#' @param nsamples  Number of tips
+#'
+#' @return phylo object
+#' @export
 generate_random_tree=function(nsamples){
   tree=rtree(nsamples)
   tree=bind.tree(tree,read.tree(text="(zeros:0);"))
@@ -232,20 +287,29 @@ generate_random_tree=function(nsamples){
   tree
 }
 
-#####Simulation code
-simulate_reads_from_tree=function(df,avgdepth,n_artifacts=0,p.error=0.01){
+#' Simulates read counts from the specfified genotype summary using a binomial model
+#'
+#' @param df  list. genotype summary
+#' @param avgdeph  Average depth
+#' @param depth Depth count matrix. Each row is a mutation and each column is a clonal sample
+#' @param n_artifacts Number of artifact to include
+#' @param p.error Error rate
+#' @param vaf VAF for determining mutant read probability.
+#' @return Returns a list containing:(mtr=mtr,depth=depth,edge=ml,df=df,p.error=p.error
+#' @export
+simulate_reads_from_tree=function(df,avgdepth,n_artifacts=0,p.error=0.01,vaf=0.5){
   if(length(p.error)>1){
     stop("p.error must be scalar here")
   }
   nsamples=length(df$samples)-1
   N=length(df$df$edge_length)
-  dat=lapply(1:N,function(i) get_simulated_reads(df$df$profile_int[[i]],df$df$edge_length[i],avgdepth,p.error=p.error))
+  dat=lapply(1:N,function(i) get_simulated_reads(df$df$profile_int[[i]],df$df$edge_length[i],avgdepth,p.error=p.error,vaf=vaf))
   
   ml=do.call("c",lapply(1:N,function(i) rep(i,df$df$edge_length[i])))
   if(n_artifacts>0){
     ##Add in some artefacts that aren't simulated according to the tree topology.
     NART=n_artifacts
-    dat2=lapply(1:NART,function(i) get_simulated_reads(ifelse(runif(nsamples+1)<0.3,1,0),1,avgdepth,p.error=p.error))
+    dat2=lapply(1:NART,function(i) get_simulated_reads(ifelse(runif(nsamples+1)<0.3,1,0),1,avgdepth,p.error=p.error,vaf = vaf))
     dat=c(dat,dat2)
     ml=c(ml,rep(NA,NART))
   }
@@ -256,24 +320,29 @@ simulate_reads_from_tree=function(df,avgdepth,n_artifacts=0,p.error=0.01){
   p.error=rep(p.error,length(df$samples))
   idx.zeros=match("zeros",df$samples)
   mtr[,idx.zeros]=0
-  depth[,idx.zeros]=10
+  depth[,idx.zeros]=100
   p.error[idx.zeros]=1e-6 ##This will force the inference code to keep the zeros branch as a zero length outgroup. 
   list(mtr=mtr,depth=depth,edge=ml,df=df,p.error=p.error)
 }
 
-get_simulated_reads=function(geno,n,depth,p.error=0.01){
+get_simulated_reads=function(geno,n,depth,p.error=0.01,vaf=0.5){
   if(n==0){
     emptymat=matrix(1,nrow=0,ncol=length(geno))
     return(list(mtr=emptymat,depth=emptymat))
   }
   geno=rep(geno,n)
   depth=rpois(length(geno),depth)
-  mtr=rbinom(length(depth),depth,prob=ifelse(geno==0,p.error,0.5-p.error))
+  mtr=rbinom(length(depth),depth,prob=ifelse(geno==0,p.error,vaf*(1-2*p.error)+p.error))
+  if(any(is.na(mtr))){
+    browser()
+  }
   list(mtr=matrix(mtr,nrow=n,byrow = TRUE),
        depth=matrix(depth,nrow=n,byrow = TRUE)
   )
 }
-
+#' Wrapper to run simulation 
+#'
+#' @export
 run_sim=function(nsamp,depth,n_artifacts=0){
   tree=generate_random_tree(nsamp)
   df=reconstruct_genotype_summary(tree)
@@ -285,7 +354,8 @@ run_sim=function(nsamp,depth,n_artifacts=0){
        edge_idx_orig=dat$edge,
        edge_idx_ml=res$summary$edge_ml,dat=dat,res=res,tree=tree)
 }
-
+#' Plots simulation results
+#' @export
 plot_sim_result=function(sim){
   par(mfrow=c(2,2))
   mismatch_prop=length(which(sim$edge_idx_orig!=sim$edge_idx_ml))/length(sim$edge_idx_orig)
@@ -329,5 +399,17 @@ shade_between=function(x,y1,y2,color){
 }
 
 
+compare_sim=function(df,res){
+  res=data.frame(edge_length_orig=df$df$edge_length,
+  edge_length_inferred=res$df$df$edge_length,
+  expected_edge_length_inferred=res$df$df$expected_edge_length)
+  res$hard_diff=res$edge_length_inferred-res$edge_length_orig
+  res$soft_diff=res$expected_edge_length_inferred-res$edge_length_orig
+  c(sdhard=sd(res$hard_diff),
+    sdsoft=sd(res$soft_diff),
+    adhard=mean(abs(res$hard_diff)),
+    adsoft=mean(abs(res$soft_diff)))
+  
+}
 
 
